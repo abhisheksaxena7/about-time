@@ -489,7 +489,6 @@ function render() {
     tzDiv.className = 'city-tz';
     tzDiv.textContent = group.abbr ? `(${group.abbr})` : '';
     content.appendChild(tzDiv);
-
     // --- Home offset difference ---
     let diffDiv = document.createElement('div');
     diffDiv.className = 'city-diff';
@@ -513,9 +512,8 @@ function render() {
     diffDiv.style.marginBottom = '0.5em';
     diffDiv.style.fontSize = '1.2rem';
     diffDiv.style.color = '#b84cff';
-    content.appendChild(diffDiv);
-
     col.appendChild(content);
+    col.appendChild(diffDiv);
     root.appendChild(col);
   });
 
@@ -678,7 +676,7 @@ function renderAddModal() {
 render();
 setInterval(() => {
   if (!addModalOpen) render();
-}, 1000);
+}, 60000); // 60000 ms = 1 minute
 
 // Add a reset button at the top of the page to restore real time
 function addResetButton() {
