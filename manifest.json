@@ -4,11 +4,11 @@
   "version": "1.0",
   "description": "Timezones of your choosing in every new tab screen.",
   "chrome_url_overrides": {
-    "newtab": "index.html"
+    "newtab": "public/index.html"
   },
   "icons": {
-    "16": "icon16.png",
-    "48": "icon48.png",
-    "128": "icon128.png"
+    "16": "src/assets/icons/icon16.png",
+    "48": "src/assets/icons/icon48.png",
+    "128": "src/assets/icons/icon128.png"
   }
 }
