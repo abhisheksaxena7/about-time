@@ -21,9 +21,9 @@ body {
 }
 
 .city-column {
-  flex: 1 0 240px;
-  min-width: 200px;
-  max-width: 320px;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: none;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -52,6 +52,26 @@ body {
 .city-column .remove-btn:hover {
   color: #c00;
   opacity: 1;
+}
+
+.home-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  z-index: 2;
+}
+.home-btn:hover {
+  opacity: 1;
+}
+.city-column[style*='box-shadow'] {
+  /* Extra highlight for home column */
+  border-radius: 16px;
 }
 
 .city-time-main {

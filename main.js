@@ -20,6 +20,105 @@ const pastelGradients = [
   'linear-gradient(180deg, #0a2239 0%, #3a506b 100%)',
 ];
 
+// --- Built-in city list for autocomplete ---
+const CITY_DB = [
+  { name: 'New York, USA', tz: 'America/New_York' },
+  { name: 'Los Angeles, USA', tz: 'America/Los_Angeles' },
+  { name: 'London, GBR', tz: 'Europe/London' },
+  { name: 'Paris, FRA', tz: 'Europe/Paris' },
+  { name: 'Tokyo, JPN', tz: 'Asia/Tokyo' },
+  { name: 'Sydney, AUS', tz: 'Australia/Sydney' },
+  { name: 'Toronto, CAN', tz: 'America/Toronto' },
+  { name: 'Sao Paulo, BRA', tz: 'America/Sao_Paulo' },
+  { name: 'San Francisco, USA', tz: 'America/Los_Angeles' },
+  { name: 'Vancouver, CAN', tz: 'America/Vancouver' },
+  { name: 'Houston, USA', tz: 'America/Chicago' },
+  { name: 'Chicago, USA', tz: 'America/Chicago' },
+  { name: 'Mexico City, MEX', tz: 'America/Mexico_City' },
+  { name: 'Beijing, CHN', tz: 'Asia/Shanghai' },
+  { name: 'Moscow, RUS', tz: 'Europe/Moscow' },
+  { name: 'Berlin, GER', tz: 'Europe/Berlin' },
+  { name: 'Madrid, ESP', tz: 'Europe/Madrid' },
+  { name: 'Rome, ITA', tz: 'Europe/Rome' },
+  { name: 'Cape Town, ZAF', tz: 'Africa/Johannesburg' },
+  { name: 'Dubai, ARE', tz: 'Asia/Dubai' },
+  { name: 'Mumbai, IND', tz: 'Asia/Kolkata' },
+  { name: 'Jaipur, IND', tz: 'Asia/Kolkata' },
+  { name: 'Rio de Janeiro, BRA', tz: 'America/Sao_Paulo' },
+  { name: 'Hong Kong, HKG', tz: 'Asia/Hong_Kong' },
+  { name: 'Singapore, SGP', tz: 'Asia/Singapore' },
+  { name: 'Bangkok, THA', tz: 'Asia/Bangkok' },
+  { name: 'Seoul, KOR', tz: 'Asia/Seoul' },
+  { name: 'Istanbul, TUR', tz: 'Europe/Istanbul' },
+  { name: 'Buenos Aires, ARG', tz: 'America/Argentina/Buenos_Aires' },
+  { name: 'Auckland, NZL', tz: 'Pacific/Auckland' },
+  { name: 'Johannesburg, ZAF', tz: 'Africa/Johannesburg' },
+  { name: 'Cairo, EGY', tz: 'Africa/Cairo' },
+  { name: 'Lagos, NGA', tz: 'Africa/Lagos' },
+  { name: 'Lisbon, PRT', tz: 'Europe/Lisbon' },
+  { name: 'Zurich, CHE', tz: 'Europe/Zurich' },
+  { name: 'Dubai, ARE', tz: 'Asia/Dubai' },
+  { name: 'Kolkata, IND', tz: 'Asia/Kolkata' },
+  { name: 'Delhi, IND', tz: 'Asia/Kolkata' },
+  { name: 'Bangalore, IND', tz: 'Asia/Kolkata' },
+  { name: 'San Diego, USA', tz: 'America/Los_Angeles' },
+  { name: 'Boston, USA', tz: 'America/New_York' },
+  { name: 'Seattle, USA', tz: 'America/Los_Angeles' },
+  { name: 'Miami, USA', tz: 'America/New_York' },
+  { name: 'Montreal, CAN', tz: 'America/Toronto' },
+  { name: 'Ottawa, CAN', tz: 'America/Toronto' },
+  { name: 'Edmonton, CAN', tz: 'America/Edmonton' },
+  { name: 'Calgary, CAN', tz: 'America/Edmonton' },
+  { name: 'Brisbane, AUS', tz: 'Australia/Brisbane' },
+  { name: 'Melbourne, AUS', tz: 'Australia/Melbourne' },
+  { name: 'Perth, AUS', tz: 'Australia/Perth' },
+  { name: 'Adelaide, AUS', tz: 'Australia/Adelaide' },
+  { name: 'Wellington, NZL', tz: 'Pacific/Auckland' },
+  { name: 'Christchurch, NZL', tz: 'Pacific/Auckland' },
+  { name: 'Osaka, JPN', tz: 'Asia/Tokyo' },
+  { name: 'Nagoya, JPN', tz: 'Asia/Tokyo' },
+  { name: 'Kyoto, JPN', tz: 'Asia/Tokyo' },
+  { name: 'Shanghai, CHN', tz: 'Asia/Shanghai' },
+  { name: 'Guangzhou, CHN', tz: 'Asia/Shanghai' },
+  { name: 'Shenzhen, CHN', tz: 'Asia/Shanghai' },
+  { name: 'Chengdu, CHN', tz: 'Asia/Shanghai' },
+  { name: 'Nairobi, KEN', tz: 'Africa/Nairobi' },
+  { name: 'Casablanca, MAR', tz: 'Africa/Casablanca' },
+  { name: 'Helsinki, FIN', tz: 'Europe/Helsinki' },
+  { name: 'Stockholm, SWE', tz: 'Europe/Stockholm' },
+  { name: 'Oslo, NOR', tz: 'Europe/Oslo' },
+  { name: 'Copenhagen, DNK', tz: 'Europe/Copenhagen' },
+  { name: 'Warsaw, POL', tz: 'Europe/Warsaw' },
+  { name: 'Prague, CZE', tz: 'Europe/Prague' },
+  { name: 'Budapest, HUN', tz: 'Europe/Budapest' },
+  { name: 'Vienna, AUT', tz: 'Europe/Vienna' },
+  { name: 'Brussels, BEL', tz: 'Europe/Brussels' },
+  { name: 'Amsterdam, NLD', tz: 'Europe/Amsterdam' },
+  { name: 'Dublin, IRL', tz: 'Europe/Dublin' },
+  { name: 'Athens, GRC', tz: 'Europe/Athens' },
+  { name: 'Bucharest, ROU', tz: 'Europe/Bucharest' },
+  { name: 'Sofia, BGR', tz: 'Europe/Sofia' },
+  { name: 'Belgrade, SRB', tz: 'Europe/Belgrade' },
+  { name: 'Zagreb, HRV', tz: 'Europe/Zagreb' },
+  { name: 'Ljubljana, SVN', tz: 'Europe/Ljubljana' },
+  { name: 'Sarajevo, BIH', tz: 'Europe/Sarajevo' },
+  { name: 'Skopje, MKD', tz: 'Europe/Skopje' },
+  { name: 'Podgorica, MNE', tz: 'Europe/Podgorica' },
+  { name: 'Tirana, ALB', tz: 'Europe/Tirane' },
+  { name: 'Kiev, UKR', tz: 'Europe/Kiev' },
+  { name: 'Minsk, BLR', tz: 'Europe/Minsk' },
+  { name: 'Riga, LVA', tz: 'Europe/Riga' },
+  { name: 'Tallinn, EST', tz: 'Europe/Tallinn' },
+  { name: 'Vilnius, LTU', tz: 'Europe/Vilnius' },
+  { name: 'Luxembourg, LUX', tz: 'Europe/Luxembourg' },
+  { name: 'Monaco, MCO', tz: 'Europe/Monaco' },
+  { name: 'Andorra la Vella, AND', tz: 'Europe/Andorra' },
+  { name: 'San Marino, SMR', tz: 'Europe/Rome' },
+  { name: 'Vaduz, LIE', tz: 'Europe/Vaduz' },
+  { name: 'Reykjavik, ISL', tz: 'Atlantic/Reykjavik' },
+  { name: 'Greenwich, GBR', tz: 'Europe/London' }
+];
+
 function getSavedCities() {
   const saved = localStorage.getItem('fio-cities');
   if (!saved) return defaultCities;
@@ -53,10 +152,25 @@ function getTzAbbr(tz, date) {
   }
 }
 
+function getHomeCity() {
+  return localStorage.getItem('fio-home-city') || '';
+}
+function setHomeCity(name) {
+  localStorage.setItem('fio-home-city', name);
+}
+
+function hutIcon(filled = false) {
+  // Simple SVG hut/home icon, filled or outline
+  return filled
+    ? `<svg width="22" height="22" viewBox="0 0 22 22" fill="#b84cff" xmlns="http://www.w3.org/2000/svg"><path d="M11 3L3 10h2v7a1 1 0 001 1h3v-4h2v4h3a1 1 0 001-1v-7h2L11 3z"/></svg>`
+    : `<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#b84cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M11 3L3 10h2v7a1 1 0 001 1h3v-4h2v4h3a1 1 0 001-1v-7h2L11 3z"/></svg>`;
+}
+
 function render() {
   const root = document.getElementById('root');
   root.innerHTML = '';
   const cities = getSavedCities();
+  const homeCity = getHomeCity();
 
   // FAB add-location button
   let fab = document.querySelector('.fab-add-location');
@@ -72,6 +186,31 @@ function render() {
     const col = document.createElement('div');
     col.className = 'city-column';
     col.style.background = pastelGradients[idx % pastelGradients.length];
+    if (city.name === homeCity) {
+      col.style.boxShadow = '0 0 0 3px #b84cff, 0 4px 32px rgba(0,0,0,0.3)';
+    }
+
+    // Home/Hut icon
+    const homeBtn = document.createElement('button');
+    homeBtn.className = 'home-btn';
+    homeBtn.innerHTML = hutIcon(city.name === homeCity);
+    homeBtn.title = city.name === homeCity ? 'Home' : 'Set as Home';
+    homeBtn.style.position = 'absolute';
+    homeBtn.style.top = '16px';
+    homeBtn.style.left = '16px';
+    homeBtn.style.background = 'none';
+    homeBtn.style.border = 'none';
+    homeBtn.style.cursor = 'pointer';
+    homeBtn.style.padding = '0';
+    homeBtn.style.opacity = city.name === homeCity ? '1' : '0.7';
+    homeBtn.onmouseenter = () => homeBtn.style.opacity = '1';
+    homeBtn.onmouseleave = () => homeBtn.style.opacity = city.name === homeCity ? '1' : '0.7';
+    homeBtn.onclick = (e) => {
+      e.stopPropagation();
+      setHomeCity(city.name);
+      render();
+    };
+    col.appendChild(homeBtn);
 
     // Remove button
     const remove = document.createElement('button');
@@ -80,8 +219,10 @@ function render() {
     remove.title = 'Remove city';
     remove.onclick = () => {
       const cities = getSavedCities();
+      const wasHome = city.name === getHomeCity();
       cities.splice(idx, 1);
       saveCities(cities);
+      if (wasHome) setHomeCity('');
       render();
     };
     col.appendChild(remove);
@@ -210,6 +351,55 @@ function renderAddModal() {
   input.placeholder = 'Type your location here';
   card.appendChild(input);
 
+  // Autocomplete dropdown
+  const dropdown = document.createElement('div');
+  dropdown.style.position = 'relative';
+  dropdown.style.width = '100%';
+  dropdown.style.zIndex = '10';
+  card.appendChild(dropdown);
+
+  let selectedCity = null;
+  let filtered = [];
+
+  function updateDropdown() {
+    dropdown.innerHTML = '';
+    const val = input.value.trim().toLowerCase();
+    if (!val) return;
+    filtered = CITY_DB.filter(c => c.name.toLowerCase().includes(val));
+    if (filtered.length === 0) {
+      const nores = document.createElement('div');
+      nores.textContent = 'No results';
+      nores.style.padding = '8px 12px';
+      nores.style.color = '#888';
+      dropdown.appendChild(nores);
+      selectedCity = null;
+      return;
+    }
+    filtered.slice(0, 8).forEach((city, idx) => {
+      const opt = document.createElement('div');
+      opt.textContent = city.name;
+      opt.style.padding = '8px 12px';
+      opt.style.cursor = 'pointer';
+      opt.style.background = idx === 0 ? '#f3eaff' : '#fff';
+      opt.onmouseenter = () => {
+        Array.from(dropdown.children).forEach(c => c.style.background = '#fff');
+        opt.style.background = '#f3eaff';
+        selectedCity = city;
+      };
+      opt.onclick = () => {
+        input.value = city.name;
+        selectedCity = city;
+        updateDropdown();
+      };
+      dropdown.appendChild(opt);
+      if (idx === 0) selectedCity = city;
+    });
+  }
+
+  input.addEventListener('input', updateDropdown);
+  input.addEventListener('focus', updateDropdown);
+  input.addEventListener('blur', () => setTimeout(() => dropdown.innerHTML = '', 200));
+
   // Actions
   const actions = document.createElement('div');
   actions.className = 'add-modal-actions';
@@ -227,12 +417,11 @@ function renderAddModal() {
     e.preventDefault();
     const name = input.value.trim();
     if (!name) return;
-    // For now, ask for IANA tz in prompt (or could use a lookup API)
-    const tz = prompt('Enter IANA Time Zone for this city (e.g. America/Los_Angeles):');
-    if (!tz) return;
+    const city = CITY_DB.find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (!city) return;
     const cities = getSavedCities();
-    if (cities.some(c => c.name.toLowerCase() === name.toLowerCase())) return;
-    cities.push({ name, tz });
+    if (cities.some(c => c.name.toLowerCase() === city.name.toLowerCase())) return;
+    cities.push({ name: city.name, tz: city.tz });
     saveCities(cities);
     closeAddModal();
     render();
@@ -250,4 +439,6 @@ function renderAddModal() {
 }
 
 render();
-setInterval(updateTimes, 1000);
+setInterval(() => {
+  if (!addModalOpen) render();
+}, 1000);
