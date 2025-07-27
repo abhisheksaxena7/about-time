@@ -144,11 +144,35 @@ function getOffsetString(tz) {
   }
 }
 
-function getTzAbbr(tz, date) {
+function getTzAbbr(tz, date = new Date()) {
   try {
-    return date.toLocaleTimeString('en-US', { timeZone: tz, timeZoneName: 'short' }).split(' ').pop();
+    // Use toLocaleTimeString with timeZoneName: 'short' and extract the abbreviation
+    const parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' }).formatToParts(date);
+    const tzName = parts.find(p => p.type === 'timeZoneName');
+    if (!tzName) return '';
+    // Extract abbreviation (e.g., 'EDT', 'EST', 'PDT', etc)
+    const abbr = tzName.value.match(/[A-Z]{2,5}/);
+    return abbr ? abbr[0] : tzName.value;
   } catch {
     return '';
+  }
+}
+
+function getTzOffsetHours(tz, date = new Date()) {
+  // Returns offset in hours from UTC for a given tz
+  try {
+    const dtf = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' });
+    const parts = dtf.formatToParts(date);
+    const tzName = parts.find(p => p.type === 'timeZoneName');
+    if (!tzName) return 0;
+    // Try to extract offset from e.g. 'GMT+5', 'GMT-3', 'UTC+2', etc
+    const match = tzName.value.match(/([+-]?\d{1,2})/);
+    if (match) return parseInt(match[1], 10);
+    // fallback: use getTimezoneOffset
+    const local = new Date(date.toLocaleString('en-US', { timeZone: tz }));
+    return -local.getTimezoneOffset() / 60;
+  } catch {
+    return 0;
   }
 }
 
@@ -169,8 +193,23 @@ function hutIcon(filled = false) {
 function render() {
   const root = document.getElementById('root');
   root.innerHTML = '';
-  const cities = getSavedCities();
+  let cities = getSavedCities();
   const homeCity = getHomeCity();
+  let homeOffset = null;
+  if (homeCity) {
+    const homeObj = cities.find(c => c.name === homeCity);
+    if (homeObj) homeOffset = getTzOffsetHours(homeObj.tz);
+  }
+
+  // Sort cities from eastmost (highest offset) to westmost (lowest offset)
+  const now = new Date();
+  cities = cities.slice().sort((a, b) => {
+    const offA = getTzOffsetHours(a.tz, now);
+    const offB = getTzOffsetHours(b.tz, now);
+    // Descending: eastmost (highest offset) first
+    if (offA !== offB) return offB - offA;
+    return 0;
+  });
 
   // FAB add-location button
   let fab = document.querySelector('.fab-add-location');
@@ -272,13 +311,34 @@ function render() {
 
     const tzDiv = document.createElement('div');
     tzDiv.className = 'city-tz';
-    tzDiv.textContent = `(${tzAbbr})`;
+    tzDiv.textContent = tzAbbr ? `(${tzAbbr})` : '';
     col.appendChild(tzDiv);
 
-    const offsetDiv = document.createElement('div');
-    offsetDiv.className = 'city-offset';
-    offsetDiv.textContent = offsetStr ? (offsetStr.startsWith('+') || offsetStr.startsWith('-') ? offsetStr : `+${offsetStr}`) : '';
-    col.appendChild(offsetDiv);
+    // Remove offsetDiv (do not append it)
+    // --- Home offset difference ---
+    let diffDiv = document.createElement('div');
+    diffDiv.className = 'city-diff';
+    if (homeCity && homeOffset !== null) {
+      const thisOffset = getTzOffsetHours(city.tz);
+      let diff = thisOffset - homeOffset;
+      if (city.name === homeCity) {
+        diffDiv.textContent = '';
+      } else if (diff === 0) {
+        diffDiv.textContent = '0';
+      } else if (diff > 0) {
+        diffDiv.textContent = `+${diff}`;
+      } else {
+        diffDiv.textContent = `${diff}`;
+      }
+    } else {
+      diffDiv.textContent = '';
+    }
+    diffDiv.style.textAlign = 'center';
+    diffDiv.style.marginTop = 'auto';
+    diffDiv.style.marginBottom = '0.5em';
+    diffDiv.style.fontSize = '1.2rem';
+    diffDiv.style.color = '#b84cff';
+    col.appendChild(diffDiv);
 
     root.appendChild(col);
   });
