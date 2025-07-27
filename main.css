@@ -118,6 +118,14 @@ body {
   text-align: center;
 }
 
+.city-separator {
+  border-bottom: 2px solid #8a2be2;
+  margin: 0.7em auto;
+  opacity: 0.8;
+  width: 80%;
+  max-width: 160px;
+}
+
 .add-column {
   flex: 1 0 200px;
   min-width: 180px;

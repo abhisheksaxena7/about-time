@@ -371,12 +371,24 @@ function render() {
     dateDiv.textContent = group.dateStr;
     col.appendChild(dateDiv);
 
+    // --- ADD SEPARATOR after date ---
+    const sepAfterDate = document.createElement('div');
+    sepAfterDate.className = 'city-separator';
+    col.appendChild(sepAfterDate);
+
     // List all city names in group
     group.cities.forEach((city, i) => {
       const namesDiv = document.createElement('div');
       namesDiv.className = 'city-names';
       namesDiv.textContent = city.name;
       col.appendChild(namesDiv);
+
+      // --- ADD SEPARATOR between city names, but not after the last one ---
+      if (i < group.cities.length - 1) {
+        const sepBetweenCities = document.createElement('div');
+        sepBetweenCities.className = 'city-separator';
+        col.appendChild(sepBetweenCities);
+      }
     });
 
     const tzDiv = document.createElement('div');
