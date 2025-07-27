@@ -161,16 +161,13 @@ function getTzAbbr(tz, date = new Date()) {
 function getTzOffsetHours(tz, date = new Date()) {
   // Returns offset in hours from UTC for a given tz
   try {
-    const dtf = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'short' });
-    const parts = dtf.formatToParts(date);
-    const tzName = parts.find(p => p.type === 'timeZoneName');
-    if (!tzName) return 0;
-    // Try to extract offset from e.g. 'GMT+5', 'GMT-3', 'UTC+2', etc
-    const match = tzName.value.match(/([+-]?\d{1,2})/);
-    if (match) return parseInt(match[1], 10);
-    // fallback: use getTimezoneOffset
-    const local = new Date(date.toLocaleString('en-US', { timeZone: tz }));
-    return -local.getTimezoneOffset() / 60;
+    // Get the UTC time in ms
+    const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+    // Get the tz time in ms
+    const tzDate = new Date(date.toLocaleString('en-US', { timeZone: tz }));
+    // Offset in minutes
+    const diff = (tzDate.getTime() - utcDate.getTime()) / (60 * 1000);
+    return +(diff / 60).toFixed(1);
   } catch {
     return 0;
   }
@@ -190,25 +187,114 @@ function hutIcon(filled = false) {
     : `<svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#b84cff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M11 3L3 10h2v7a1 1 0 001 1h3v-4h2v4h3a1 1 0 001-1v-7h2L11 3z"/></svg>`;
 }
 
+// Canonical IANA mapping for major cities
+const CANONICAL_TZ = {
+  'New York, USA': 'America/New_York',
+  'Toronto, CAN': 'America/New_York',
+  'Montreal, CAN': 'America/New_York',
+  'Boston, USA': 'America/New_York',
+  'Washington, USA': 'America/New_York',
+  'San Diego, USA': 'America/Los_Angeles',
+  'Los Angeles, USA': 'America/Los_Angeles',
+  'San Francisco, USA': 'America/Los_Angeles',
+  'Vancouver, CAN': 'America/Los_Angeles',
+  'Seattle, USA': 'America/Los_Angeles',
+  'Houston, USA': 'America/Chicago',
+  'Chicago, USA': 'America/Chicago',
+  'Mexico City, MEX': 'America/Mexico_City',
+  'London': 'Europe/London',
+  'London, GBR': 'Europe/London',
+  'Paris, FRA': 'Europe/Paris',
+  'Berlin, GER': 'Europe/Berlin',
+  'Tokyo': 'Asia/Tokyo',
+  'Tokyo, JPN': 'Asia/Tokyo',
+  'Seoul, KOR': 'Asia/Seoul',
+  'Sydney, AUS': 'Australia/Sydney',
+  'Melbourne, AUS': 'Australia/Melbourne',
+  'Brisbane, AUS': 'Australia/Brisbane',
+  'Sao Paulo, BRA': 'America/Sao_Paulo',
+  'Rio de Janeiro, BRA': 'America/Sao_Paulo',
+  // ... add more as needed ...
+};
+
+function normalizeCityTz(city) {
+  // If city name is in canonical map, use that IANA
+  if (CANONICAL_TZ[city.name]) {
+    return { ...city, tz: CANONICAL_TZ[city.name] };
+  }
+  return city;
+}
+
+function groupCitiesByTimeZone(cities) {
+  // Returns array of { tz, cities: [city, ...], offset, abbr, time, ampm, dateStr }
+  const now = new Date();
+  const groups = {};
+  for (const city of cities) {
+    const normCity = normalizeCityTz(city);
+    if (!groups[normCity.tz]) groups[normCity.tz] = [];
+    groups[normCity.tz].push(normCity);
+  }
+  return Object.entries(groups).map(([tz, cities]) => {
+    // Use the first city for display
+    const city = cities[0];
+    let cityTime, hour, min, ampm, day, dateStr, abbr, offset;
+    try {
+      cityTime = new Date(now.toLocaleString('en-US', { timeZone: tz }));
+      hour = cityTime.getHours();
+      min = cityTime.getMinutes();
+      ampm = hour >= 12 ? 'pm' : 'am';
+      let hour12 = hour % 12;
+      if (hour12 === 0) hour12 = 12;
+      day = cityTime.toLocaleDateString('en-US', { weekday: 'short' });
+      dateStr = `${day}. ${cityTime.getDate().toString().padStart(2, '0')}${getOrdinal(cityTime.getDate())}`;
+      abbr = getTzAbbr(tz, cityTime);
+      offset = getTzOffsetHours(tz, now);
+    } catch {
+      hour = '--';
+      min = '--';
+      ampm = '';
+      dateStr = '';
+      abbr = '';
+      offset = 0;
+    }
+    return {
+      tz,
+      cities,
+      offset,
+      abbr,
+      hour,
+      min,
+      ampm,
+      dateStr,
+      cityTime
+    };
+  });
+}
+
 function render() {
   const root = document.getElementById('root');
   root.innerHTML = '';
   let cities = getSavedCities();
   const homeCity = getHomeCity();
-  let homeOffset = null;
+  let homeTz = null;
   if (homeCity) {
     const homeObj = cities.find(c => c.name === homeCity);
-    if (homeObj) homeOffset = getTzOffsetHours(homeObj.tz);
+    if (homeObj) homeTz = homeObj.tz;
   }
 
-  // Sort cities from eastmost (highest offset) to westmost (lowest offset)
+  // Group and sort
+  let groups = groupCitiesByTimeZone(cities);
+  // Debug: log offsets for each group
   const now = new Date();
-  cities = cities.slice().sort((a, b) => {
+  groups.forEach(g => {
+    console.log(`TZ: ${g.tz}, Offset: ${getTzOffsetHours(g.tz, now)}, Cities: ${g.cities.map(c => c.name).join(', ')}`);
+  });
+  groups = groups.sort((a, b) => {
     const offA = getTzOffsetHours(a.tz, now);
     const offB = getTzOffsetHours(b.tz, now);
-    // Descending: eastmost (highest offset) first
-    if (offA !== offB) return offB - offA;
-    return 0;
+    if (offA !== offB) return offA - offB; // west to east
+    // If offsets are equal, sort by first city name
+    return a.cities[0].name.localeCompare(b.cities[0].name);
   });
 
   // FAB add-location button
@@ -221,19 +307,21 @@ function render() {
     document.body.appendChild(fab);
   }
 
-  cities.forEach((city, idx) => {
+  groups.forEach((group, idx) => {
     const col = document.createElement('div');
     col.className = 'city-column';
     col.style.background = pastelGradients[idx % pastelGradients.length];
-    if (city.name === homeCity) {
+    // Home logic: if any city in group is home
+    const isHome = group.cities.some(c => c.name === homeCity);
+    if (isHome) {
       col.style.boxShadow = '0 0 0 3px #b84cff, 0 4px 32px rgba(0,0,0,0.3)';
     }
 
     // Home/Hut icon
     const homeBtn = document.createElement('button');
     homeBtn.className = 'home-btn';
-    homeBtn.innerHTML = hutIcon(city.name === homeCity);
-    homeBtn.title = city.name === homeCity ? 'Home' : 'Set as Home';
+    homeBtn.innerHTML = hutIcon(isHome);
+    homeBtn.title = isHome ? 'Home' : 'Set as Home';
     homeBtn.style.position = 'absolute';
     homeBtn.style.top = '16px';
     homeBtn.style.left = '16px';
@@ -241,87 +329,68 @@ function render() {
     homeBtn.style.border = 'none';
     homeBtn.style.cursor = 'pointer';
     homeBtn.style.padding = '0';
-    homeBtn.style.opacity = city.name === homeCity ? '1' : '0.7';
+    homeBtn.style.opacity = isHome ? '1' : '0.7';
     homeBtn.onmouseenter = () => homeBtn.style.opacity = '1';
-    homeBtn.onmouseleave = () => homeBtn.style.opacity = city.name === homeCity ? '1' : '0.7';
+    homeBtn.onmouseleave = () => homeBtn.style.opacity = isHome ? '1' : '0.7';
     homeBtn.onclick = (e) => {
       e.stopPropagation();
-      setHomeCity(city.name);
+      setHomeCity(group.cities[0].name); // set first city as home
       render();
     };
     col.appendChild(homeBtn);
 
-    // Remove button
+    // Remove button (removes all cities in group)
     const remove = document.createElement('button');
     remove.className = 'remove-btn';
     remove.textContent = '✕';
-    remove.title = 'Remove city';
+    remove.title = 'Remove all cities in this time zone';
     remove.onclick = () => {
-      const cities = getSavedCities();
-      const wasHome = city.name === getHomeCity();
-      cities.splice(idx, 1);
-      saveCities(cities);
+      let all = getSavedCities();
+      const names = group.cities.map(c => c.name);
+      const wasHome = group.cities.some(c => c.name === getHomeCity());
+      all = all.filter(c => !names.includes(c.name));
+      saveCities(all);
       if (wasHome) setHomeCity('');
       render();
     };
     col.appendChild(remove);
 
     // Time
-    const now = new Date();
-    let cityTime, hour, min, ampm, day, dateStr, tzAbbr, offsetStr;
-    try {
-      cityTime = new Date(now.toLocaleString('en-US', { timeZone: city.tz }));
-      hour = cityTime.getHours();
-      min = cityTime.getMinutes();
-      ampm = hour >= 12 ? 'pm' : 'am';
-      let hour12 = hour % 12;
-      if (hour12 === 0) hour12 = 12;
-      day = cityTime.toLocaleDateString('en-US', { weekday: 'short' });
-      dateStr = `${day}. ${cityTime.getDate().toString().padStart(2, '0')}${getOrdinal(cityTime.getDate())}`;
-      tzAbbr = getTzAbbr(city.tz, cityTime);
-      offsetStr = getOffsetString(city.tz);
-    } catch {
-      hour = '--';
-      min = '--';
-      ampm = '';
-      dateStr = '';
-      tzAbbr = '';
-      offsetStr = '';
-    }
-
     const timeMain = document.createElement('div');
     timeMain.className = 'city-time-main';
-    timeMain.innerHTML = `<span>${String(hour % 12 === 0 ? 12 : hour % 12).padStart(2, '0')}</span><span class="city-time-minor">${String(min).padStart(2, '0')}</span>`;
+    timeMain.innerHTML = `<span>${String(group.hour % 12 === 0 ? 12 : group.hour % 12).padStart(2, '0')}</span><span class="city-time-minor">${String(group.min).padStart(2, '0')}</span>`;
     col.appendChild(timeMain);
 
     const ampmDiv = document.createElement('div');
     ampmDiv.className = 'city-time-ampm';
-    ampmDiv.textContent = ampm;
+    ampmDiv.textContent = group.ampm;
     col.appendChild(ampmDiv);
 
     const dateDiv = document.createElement('div');
     dateDiv.className = 'city-date';
-    dateDiv.textContent = dateStr;
+    dateDiv.textContent = group.dateStr;
     col.appendChild(dateDiv);
 
-    const namesDiv = document.createElement('div');
-    namesDiv.className = 'city-names';
-    namesDiv.textContent = city.name;
-    col.appendChild(namesDiv);
+    // List all city names in group
+    group.cities.forEach((city, i) => {
+      const namesDiv = document.createElement('div');
+      namesDiv.className = 'city-names';
+      namesDiv.textContent = city.name;
+      col.appendChild(namesDiv);
+    });
 
     const tzDiv = document.createElement('div');
     tzDiv.className = 'city-tz';
-    tzDiv.textContent = tzAbbr ? `(${tzAbbr})` : '';
+    tzDiv.textContent = group.abbr ? `(${group.abbr})` : '';
     col.appendChild(tzDiv);
 
-    // Remove offsetDiv (do not append it)
     // --- Home offset difference ---
     let diffDiv = document.createElement('div');
     diffDiv.className = 'city-diff';
-    if (homeCity && homeOffset !== null) {
-      const thisOffset = getTzOffsetHours(city.tz);
-      let diff = thisOffset - homeOffset;
-      if (city.name === homeCity) {
+    if (homeTz) {
+      const homeOffset = getTzOffsetHours(homeTz);
+      let diff = group.offset - homeOffset;
+      if (isHome) {
         diffDiv.textContent = '';
       } else if (diff === 0) {
         diffDiv.textContent = '0';
@@ -481,7 +550,7 @@ function renderAddModal() {
     if (!city) return;
     const cities = getSavedCities();
     if (cities.some(c => c.name.toLowerCase() === city.name.toLowerCase())) return;
-    cities.push({ name: city.name, tz: city.tz });
+    cities.push(normalizeCityTz({ name: city.name, tz: city.tz }));
     saveCities(cities);
     closeAddModal();
     render();
