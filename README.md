@@ -8,7 +8,6 @@ A sleek and intuitive Chrome extension that replaces your new tab page with a wo
 - Add and remove multiple time zones
 - Beautiful, minimal interface
 - Easy-to-read time differences between locations
-- 12/24 hour time format support
 
 ## Installation
 
@@ -19,22 +18,6 @@ To load this extension in Chrome:
 3. Click "Load unpacked" button in the top left
 4. Navigate to the extension directory and select it
 5. The extension should now be installed and will activate when you open a new tab
-
-## Development
-
-The extension is structured as follows:
-
-```
-figure-time/
-├── manifest.json        # Extension configuration
-├── public/
-│   ├── index.html      # Main new tab page
-│   └── popup.html      # Extension popup
-├── src/
-│   ├── assets/         # Images and icons
-│   ├── js/            # JavaScript files
-│   └── styles/        # CSS files
-```
 
 ## Contributing
 
