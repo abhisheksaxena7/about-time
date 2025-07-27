@@ -2,6 +2,8 @@
 
 A sleek and intuitive Chrome extension that replaces your new tab page with a world clock dashboard. Perfect for teams working across different time zones or anyone who needs to keep track of multiple time zones at once.
 
+![About Time Dashboard Screenshot](docs/images/screenshot-dashboard.png)
+
 ## Features
 
 - Replaces Chrome's new tab page with a clean time zone dashboard
