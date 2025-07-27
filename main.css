@@ -20,6 +20,15 @@ body {
   margin: 0;
 }
 
+.city-content {
+  margin: auto 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 .city-column {
   flex: 1 1 0;
   min-width: 0;
@@ -29,7 +38,7 @@ body {
   align-items: center;
   justify-content: flex-start;
   height: 100vh;
-  padding: 32px 12px 24px 12px;
+  padding: 0 12px;
   box-sizing: border-box;
   color: #222;
   position: relative;
@@ -87,10 +96,19 @@ body {
   margin-left: 0.2em;
   color: #444;
 }
+.city-time-hour {
+  font-size: 3.2rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #222;
+  text-align: center;
+}
 .city-time-minor {
   font-size: 2rem;
   font-weight: 400;
   color: #444;
+  text-align: center;
+  margin-top: -0.2em;
 }
 .city-date {
   font-size: 1.1rem;
@@ -298,6 +316,69 @@ body {
 }
 .add-modal-close:hover {
   color: #c00;
+}
+
+.edit-hour-input,
+.edit-min-input {
+  font-size: 3.2rem;         /* Match .city-time-main */
+  font-weight: 700;
+  width: 1.2em;
+  text-align: center;
+  border: none;
+  border-radius: 0;
+  margin: 0;
+  background: transparent;
+  color: #222;
+  outline: none;
+  box-shadow: none;
+  appearance: textfield;
+  transition: none;
+  padding: 0;
+}
+
+.edit-hour-input:focus,
+.edit-min-input:focus {
+  outline: none;
+  box-shadow: none;
+  border: none;
+  background: transparent;
+}
+
+.edit-ampm-toggle {
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: #444;
+  background: transparent;
+  border: none;
+  margin-left: 0.2em;
+  padding: 0;
+  border-radius: 0;
+  cursor: pointer;
+  transition: none;
+}
+
+.edit-ampm-toggle:hover {
+  color: #b84cff;
+  background: transparent;
+}
+
+.city-time-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 4.5em;
+  min-width: 4.5em;
+  font-family: 'Roboto Mono', 'Menlo', 'monospace', Arial, sans-serif;
+  margin: 0 auto;
+}
+
+.city-time-hour,
+.city-time-minor,
+.city-time-ampm {
+  width: 100%;
+  text-align: center;
+  letter-spacing: 0.05em;
 }
 
 @media (max-width: 900px) {

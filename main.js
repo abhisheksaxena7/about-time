@@ -1,4 +1,7 @@
 let addModalOpen = false;
+let referenceTime = null; // Date object or null for real time
+let referenceTz = null; // IANA string or null for real time
+let editingGroupTz = null; // currently edited tz
 
 const defaultCities = [
   { name: 'Los Angeles, USA', tz: 'America/Los_Angeles' },
@@ -271,6 +274,18 @@ function groupCitiesByTimeZone(cities) {
   });
 }
 
+function getReferenceDateForTz(tz) {
+  // Returns a Date object for the given tz, based on referenceTime/referenceTz
+  if (!referenceTime || !referenceTz) return new Date(new Date().toLocaleString('en-US', { timeZone: tz }));
+  // Calculate offset difference in minutes
+  const refOffset = getTzOffsetHours(referenceTz, referenceTime);
+  const targetOffset = getTzOffsetHours(tz, referenceTime);
+  // Get UTC time in ms for referenceTime
+  const utcMs = referenceTime.getTime() - (refOffset * 60 * 60 * 1000);
+  // Add target offset
+  return new Date(utcMs + (targetOffset * 60 * 60 * 1000));
+}
+
 function render() {
   const root = document.getElementById('root');
   root.innerHTML = '';
@@ -355,46 +370,125 @@ function render() {
     };
     col.appendChild(remove);
 
-    // Time
-    const timeMain = document.createElement('div');
-    timeMain.className = 'city-time-main';
-    timeMain.innerHTML = `<span>${String(group.hour % 12 === 0 ? 12 : group.hour % 12).padStart(2, '0')}</span><span class="city-time-minor">${String(group.min).padStart(2, '0')}</span>`;
-    col.appendChild(timeMain);
+    // --- Main content wrapper ---
+    const content = document.createElement('div');
+    content.className = 'city-content';
 
-    const ampmDiv = document.createElement('div');
-    ampmDiv.className = 'city-time-ampm';
-    ampmDiv.textContent = group.ampm;
-    col.appendChild(ampmDiv);
+    // Time
+    let isEditing = editingGroupTz === group.tz;
+    let refDate = getReferenceDateForTz(group.tz);
+    let hour = refDate.getHours();
+    let min = refDate.getMinutes();
+    let ampm = hour >= 12 ? 'pm' : 'am';
+    let hour12 = hour % 12;
+    if (hour12 === 0) hour12 = 12;
+    if (isEditing) {
+      // Editable inputs
+      const hourInput = document.createElement('input');
+      hourInput.type = 'number';
+      hourInput.min = 1;
+      hourInput.max = 12;
+      hourInput.value = hour12;
+      hourInput.className = 'edit-hour-input city-time-hour';
+      hourInput.style.display = 'block';
+      hourInput.style.margin = '0 auto';
+      hourInput.style.textAlign = 'center';
+      hourInput.style.fontSize = '3.2rem';
+      hourInput.style.fontWeight = '700';
+      const minInput = document.createElement('input');
+      minInput.type = 'number';
+      minInput.min = 0;
+      minInput.max = 59;
+      minInput.value = String(min).padStart(2, '0');
+      minInput.className = 'edit-min-input city-time-minor';
+      minInput.style.display = 'block';
+      minInput.style.margin = '0 auto';
+      minInput.style.textAlign = 'center';
+      minInput.style.fontSize = '2rem';
+      minInput.style.fontWeight = '400';
+      // AM/PM toggle
+      const ampmSpan = document.createElement('span');
+      ampmSpan.className = 'edit-ampm-toggle city-time-ampm';
+      ampmSpan.textContent = ampm;
+      ampmSpan.style.cursor = 'pointer';
+      ampmSpan.style.marginLeft = '0';
+      ampmSpan.onclick = () => {
+        ampm = ampm === 'am' ? 'pm' : 'am';
+        ampmSpan.textContent = ampm;
+        saveEdit();
+      };
+      // Save on blur or enter
+      function saveEdit() {
+        let h = parseInt(hourInput.value, 10);
+        let m = parseInt(minInput.value, 10);
+        if (isNaN(h) || h < 1 || h > 12) h = 12;
+        if (isNaN(m) || m < 0 || m > 59) m = 0;
+        let newHour = ampm === 'pm' ? (h === 12 ? 12 : h + 12) : (h === 12 ? 0 : h);
+        let newDate = new Date();
+        newDate.setFullYear(refDate.getFullYear(), refDate.getMonth(), refDate.getDate());
+        newDate.setHours(newHour, m, 0, 0);
+        referenceTime = newDate;
+        referenceTz = group.tz;
+        editingGroupTz = null;
+        render();
+      }
+      hourInput.onkeydown = minInput.onkeydown = (e) => {
+        if (e.key === 'Enter') saveEdit();
+        if (e.key === 'Escape') { editingGroupTz = null; render(); }
+      };
+      hourInput.onblur = minInput.onblur = () => setTimeout(() => {
+        if (document.activeElement !== hourInput && document.activeElement !== minInput) saveEdit();
+      }, 100);
+      // Container for time inputs
+      const timeBlock = document.createElement('div');
+      timeBlock.className = 'city-time-block';
+      timeBlock.appendChild(hourInput);
+      timeBlock.appendChild(minInput);
+      timeBlock.appendChild(ampmSpan);
+      content.appendChild(timeBlock);
+    } else {
+      const timeBlock = document.createElement('div');
+      timeBlock.className = 'city-time-block';
+      timeBlock.innerHTML = `
+        <div class='city-time-hour'>${String(hour12).padStart(2, '0')}</div>
+        <div class='city-time-minor'>${String(min).padStart(2, '0')}</div>
+        <div class='city-time-ampm'>${ampm}</div>
+      `;
+      timeBlock.style.cursor = 'pointer';
+      timeBlock.title = 'Click to edit time';
+      timeBlock.onclick = () => { editingGroupTz = group.tz; render(); };
+      content.appendChild(timeBlock);
+    }
 
     const dateDiv = document.createElement('div');
     dateDiv.className = 'city-date';
     dateDiv.textContent = group.dateStr;
-    col.appendChild(dateDiv);
+    content.appendChild(dateDiv);
 
     // --- ADD SEPARATOR after date ---
     const sepAfterDate = document.createElement('div');
     sepAfterDate.className = 'city-separator';
-    col.appendChild(sepAfterDate);
+    content.appendChild(sepAfterDate);
 
     // List all city names in group
     group.cities.forEach((city, i) => {
       const namesDiv = document.createElement('div');
       namesDiv.className = 'city-names';
       namesDiv.textContent = city.name;
-      col.appendChild(namesDiv);
+      content.appendChild(namesDiv);
 
       // --- ADD SEPARATOR between city names, but not after the last one ---
       if (i < group.cities.length - 1) {
         const sepBetweenCities = document.createElement('div');
         sepBetweenCities.className = 'city-separator';
-        col.appendChild(sepBetweenCities);
+        content.appendChild(sepBetweenCities);
       }
     });
 
     const tzDiv = document.createElement('div');
     tzDiv.className = 'city-tz';
     tzDiv.textContent = group.abbr ? `(${group.abbr})` : '';
-    col.appendChild(tzDiv);
+    content.appendChild(tzDiv);
 
     // --- Home offset difference ---
     let diffDiv = document.createElement('div');
@@ -419,14 +513,16 @@ function render() {
     diffDiv.style.marginBottom = '0.5em';
     diffDiv.style.fontSize = '1.2rem';
     diffDiv.style.color = '#b84cff';
-    col.appendChild(diffDiv);
+    content.appendChild(diffDiv);
 
+    col.appendChild(content);
     root.appendChild(col);
   });
 
   // Remove add column at the end (now handled by FAB + modal)
   removeAddModal();
   if (addModalOpen) renderAddModal();
+  addResetButton();
 }
 
 function getOrdinal(n) {
@@ -583,3 +679,31 @@ render();
 setInterval(() => {
   if (!addModalOpen) render();
 }, 1000);
+
+// Add a reset button at the top of the page to restore real time
+function addResetButton() {
+  let btn = document.getElementById('reset-time-btn');
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = 'reset-time-btn';
+    btn.textContent = 'Reset Time';
+    btn.style.position = 'fixed';
+    btn.style.top = '24px';
+    btn.style.right = '24px';
+    btn.style.zIndex = 1002;
+    btn.style.background = '#fff';
+    btn.style.color = '#b84cff';
+    btn.style.border = '1px solid #b84cff';
+    btn.style.borderRadius = '8px';
+    btn.style.padding = '8px 16px';
+    btn.style.cursor = 'pointer';
+    btn.onclick = () => {
+      referenceTime = null;
+      referenceTz = null;
+      editingGroupTz = null;
+      render();
+    };
+    document.body.appendChild(btn);
+  }
+  btn.style.display = (referenceTime && referenceTz) ? 'block' : 'none';
+}
