@@ -1,6 +1,6 @@
 # About Time - Chrome Extension
 
-A sleek and intuitive Chrome extension that replaces your new tab page with a world clock dashboard. Perfect for teams working across different time zones or anyone who needs to keep track of multiple time zones at once.
+A sleek and intuitive Chrome extension that replaces your new tab page with a world clock dashboard. Perfect for teams working across different time zones, looking to schedule global meetings or anyone else who needs to keep track of multiple time zones at once.
 
 ![About Time Dashboard Screenshot](docs/images/screenshot-dashboard.png)
 
